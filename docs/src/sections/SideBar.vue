@@ -56,6 +56,7 @@ export default {
             { to: '/demo', title: 'Basic Demo' },
             { to: '/iconDemo', title: 'Adding Icons' },
             { to: '/custom-html', title: 'Custom HTML via Slots' },
+            { to: '/custom-reactive-template', title: 'Custom template via Slots' },
             { to: '/manual', title: 'Manually Load Files' },
             { to: '/additionalParams', title: 'Sending Additional Params' },
             { to: '/custom-preview', title: 'Custom Styling' },

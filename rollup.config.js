@@ -4,6 +4,7 @@ import commonjs from 'rollup-plugin-commonjs';
 import replace from 'rollup-plugin-replace';
 import { terser } from "rollup-plugin-terser";
 import css from 'rollup-plugin-css-only'
+import babel from "rollup-plugin-babel";
 
 export default {
   input: 'src/index.js',
@@ -20,6 +21,10 @@ export default {
       browser: true,
     }),
     commonjs(),
+    babel({
+      exclude: "node_modules/**",
+      runtimeHelpers: true
+    }),
     css({ output: 'dist/vue2Dropzone.min.css'}),
     vue({ css: false }),
     replace({

@@ -3,14 +3,19 @@
     <div v-if="useCustomSlot" class="dz-message">
       <slot>Drop files here to upload</slot>
     </div>
+    <slot name="template" v-for="(file, index) in files" :file="file" :index="index" />
   </div>
 </template>
 
 <script>
-import Dropzone from "dropzone"; //eslint-disable-line
-import awsEndpoint from "../services/urlsigner";
+import Vue from 'vue'
 
-Dropzone.autoDiscover = false;
+import awsEndpoint from "../services/urlsigner";
+import { reactiveTemplate } from "../mixins/template";
+import { helpers } from "../mixins/helpers";
+
+import DropzoneLibrary from '../library.js';
+Vue.use(DropzoneLibrary);
 
 export default {
   props: {
@@ -53,10 +58,12 @@ export default {
     return {
       isS3: false,
       isS3OverridesServerPropagation: false,
-      wasQueueAutoProcess: true
+      wasQueueAutoProcess: true,
+      dropzone: undefined
     };
   },
   computed: {
+    
     dropzoneSettings() {
       let defaultValues = {
         thumbnailWidth: 200,
@@ -79,19 +86,21 @@ export default {
           };
         }
       }
+      if (this.hasCustomSlotTemplate) {
+        defaultValues['previewTemplate'] = '<template style="display:none;"></template>'
+      }
       return defaultValues;
-    }
+    },
   },
   mounted() {
     if (this.$isServer && this.hasBeenMounted) {
       return;
     }
     this.hasBeenMounted = true;
-
-    this.dropzone = new Dropzone(
+    this.$set(this, 'dropzone', new this.$dropzone(
       this.$refs.dropzoneElement,
       this.dropzoneSettings
-    );
+    ));
     let vm = this;
 
     this.dropzone.on("thumbnail", function(file, dataUrl) {
@@ -274,19 +283,10 @@ export default {
     manuallyAddFile: function(file, fileUrl) {
       file.manuallyAdded = true;
       this.dropzone.emit("addedfile", file);
-      let containsImageFileType = false;
-      if (
-        fileUrl.indexOf(".svg") > -1 ||
-        fileUrl.indexOf(".png") > -1 ||
-        fileUrl.indexOf(".jpg") > -1 ||
-        fileUrl.indexOf(".jpeg") > -1 ||
-        fileUrl.indexOf(".gif") > -1 ||
-        fileUrl.indexOf(".webp") > -1
-      )
-        containsImageFileType = true;
+
       if (
         this.dropzone.options.createImageThumbnails &&
-        containsImageFileType &&
+        this.isImageFile(fileUrl) &&
         file.size <= this.dropzone.options.maxThumbnailFilesize * 1024 * 1024
       ) {
         fileUrl && this.dropzone.emit("thumbnail", file, fileUrl);
@@ -426,7 +426,11 @@ export default {
         this.awss3.signingURL = location;
       }
     }
-  }
+  },
+  mixins: [
+    reactiveTemplate,
+    helpers
+  ]
 };
 </script>
 
